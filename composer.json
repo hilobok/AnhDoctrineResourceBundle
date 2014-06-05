@@ -1,0 +1,30 @@
+{
+    "name": "anh/doctrine-resource-bundle",
+    "type": "symfony-bundle",
+    "description": "Symfony integration for anh/doctrine-extensions-resource library.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrew Hilobok",
+            "email": "hilobok@gmail.com"
+        }
+    ],
+
+    "require": {
+        "anh/doctrine-extensions-resource": "@dev"
+    },
+
+    "minimum-stability": "stable",
+
+    "autoload": {
+        "psr-4": {
+            "Anh\\DoctrineResourceBundle\\": ""
+        }
+    },
+
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.x-dev"
+        }
+    }
+}
