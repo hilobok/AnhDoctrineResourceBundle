@@ -1,0 +1,39 @@
+parameters:
+    anh_doctrine_resource.orm.repository_factory.class: Anh\DoctrineResource\ORM\ResourceRepositoryFactory
+    anh_doctrine_resource.mongodb.repository_factory.class: Anh\DoctrineResource\ODM\MongoDB\ResourceRepositoryFactory
+    anh_doctrine_resource.phpcr.repository_factory.class: Anh\DoctrineResource\ODM\PHPCR\ResourceRepositoryFactory
+    anh_doctrine_resource.manager_factory.class: Anh\DoctrineResource\ResourceManagerFactory
+    anh_doctrine_resource.orm.load_metadata_subscriber.class: Anh\DoctrineResource\ORM\EventListener\LoadMetadataSubscriber
+
+services:
+    anh_doctrine_resource.orm.repository_factory:
+        class: %anh_doctrine_resource.orm.repository_factory.class%
+        arguments:
+            - @paginator
+        public: false
+
+    anh_doctrine_resource.mongodb.repository_factory:
+        class: %anh_doctrine_resource.mongodb.repository_factory.class%
+        arguments:
+            - @paginator
+        public: false
+
+    anh_doctrine_resource.phpcr.repository_factory:
+        class: %anh_doctrine_resource.phpcr.repository_factory.class%
+        arguments:
+            - @paginator
+        public: false
+
+    anh_doctrine_resource.manager_factory:
+        class: %anh_doctrine_resource.manager_factory.class%
+        arguments:
+            - %anh_doctrine_resource.resources%
+            - @event_dispatcher
+
+    anh_doctrine_resource.orm.load_metadata_subscriber:
+        class: %anh_doctrine_resource.orm.load_metadata_subscriber.class%
+        arguments:
+            - %anh_doctrine_resource.resources%
+        tags:
+            - { name: doctrine.event_subscriber }
+        public: false
