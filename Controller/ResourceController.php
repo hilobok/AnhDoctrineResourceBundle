@@ -225,7 +225,7 @@ class ResourceController extends Controller
 
     protected function getOptions(Request $request, array $defaults = array())
     {
-        $options = $request->attributes->get('_options', array()) + $defaults;
+        $options = $request->attributes->get('_anh_resource', array()) + $defaults;
 
         return $this->optionsParser
             ->setRequest($request)
