@@ -36,6 +36,12 @@ class ResourceServicesCompilerPass implements CompilerPassInterface
                 $repositoryService,
                 $this->createRepositoryDefinition($managerService)
             );
+
+            $controllerService = sprintf('%s.controller', $name);
+            $container->setDefinition(
+                $controllerService,
+                $this->createControllerDefinition($resource['controller'], $managerService)
+            );
         }
 
     }
@@ -75,6 +81,17 @@ class ResourceServicesCompilerPass implements CompilerPassInterface
         $definition = new Definition();
         $definition->setFactoryService($managerService);
         $definition->setFactoryMethod('getRepository');
+
+        return $definition;
+    }
+
+    private function createControllerDefinition($controllerClass, $managerService)
+    {
+        $definition = new Definition($controllerClass);
+        $definition->addArgument(new Reference($managerService));
+        $definition->addArgument(new Reference('anh_doctrine_resource.controller.options_parser'));
+        $definition->addArgument(new Reference('anh_doctrine_resource.controller.redirect_handler'));
+        $definition->addMethodCall('setContainer', array(new Reference('service_container')));
 
         return $definition;
     }

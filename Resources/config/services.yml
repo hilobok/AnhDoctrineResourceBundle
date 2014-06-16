@@ -4,6 +4,9 @@ parameters:
     anh_doctrine_resource.phpcr.repository_factory.class: Anh\DoctrineResource\ODM\PHPCR\ResourceRepositoryFactory
     anh_doctrine_resource.manager_factory.class: Anh\DoctrineResource\ResourceManagerFactory
     anh_doctrine_resource.orm.load_metadata_subscriber.class: Anh\DoctrineResource\ORM\EventListener\LoadMetadataSubscriber
+    anh_doctrine_resource.controller.options_parser.class: Anh\DoctrineResourceBundle\Controller\OptionsParser
+    anh_doctrine_resource.controller.redirect_handler.class: Anh\DoctrineResourceBundle\Controller\RedirectHandler
+    anh_doctrine_resource.controller.view_listener.class: Anh\DoctrineResourceBundle\EventListener\ViewListener
 
 services:
     anh_doctrine_resource.orm.repository_factory:
@@ -29,6 +32,23 @@ services:
         arguments:
             - %anh_doctrine_resource.resources%
             - @event_dispatcher
+
+    anh_doctrine_resource.controller.options_parser:
+        class: %anh_doctrine_resource.controller.options_parser.class%
+
+    anh_doctrine_resource.controller.redirect_handler:
+        class: %anh_doctrine_resource.controller.redirect_handler.class%
+        arguments:
+            - @router
+            - @anh_doctrine_resource.controller.options_parser
+
+    anh_doctrine_resource.controller.view_listener:
+        class: %anh_doctrine_resource.controller.view_listener.class%
+        arguments:
+            - @templating
+            - @?serializer
+        tags:
+            - { name: kernel.event_listener, event: kernel.view, method: onKernelView }
 
     anh_doctrine_resource.orm.load_metadata_subscriber:
         class: %anh_doctrine_resource.orm.load_metadata_subscriber.class%
