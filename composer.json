@@ -11,7 +11,7 @@
     ],
 
     "require": {
-        "anh/doctrine-extensions-resource": "0.x-dev"
+        "anh/doctrine-extensions-resource": "0.1.*"
     },
 
     "minimum-stability": "stable",
