@@ -26,9 +26,7 @@ class ResourceController extends Controller
 
     public function createAction(Request $request)
     {
-        $options = $this->getOptions($request, array(
-            'view' => 'AnhDoctrineResource:Default:create.html.twig',
-        ));
+        $options = $this->getOptions($request);
 
         $resource = $this->resourceManager->createResource();
         $form = $this->createForm($options['form'], $resource);
@@ -60,7 +58,6 @@ class ResourceController extends Controller
                 'id' => 'request.attributes.get("id")'
             ),
             'method' => 'findOneBy',
-            'view' => 'AnhDoctrineResource:Default:update.html.twig',
         ));
 
         $resource = $this->getResources($options);
@@ -108,9 +105,7 @@ class ResourceController extends Controller
 
     public function listAction(Request $request)
     {
-        $options = $this->getOptions($request, array(
-            'view' => 'AnhDoctrineResource:Default:list.html.twig',
-        ));
+        $options = $this->getOptions($request);
 
         $resources = $this->getResources($options);
 
@@ -129,7 +124,6 @@ class ResourceController extends Controller
                 'id' => 'request.attributes.get("id")'
             ),
             'method' => 'findOneBy',
-            'view' => 'AnhDoctrineResource:Default:show.html.twig',
         ));
 
         $resource = $this->getResources($options);
