@@ -2,6 +2,7 @@
 
 namespace Anh\DoctrineResourceBundle\Controller;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -20,8 +21,9 @@ class OptionsParser
 
     protected $resourceName;
 
-    public function __construct()
+    public function __construct(ContainerInterface $container)
     {
+        $this->container = $container;
         $this->language = new ExpressionLanguage();
         $this->resolver = new OptionsResolver();
         $this->configureOptions($this->resolver);
@@ -76,6 +78,12 @@ class OptionsParser
         if (strpos($option, 'resource.') !== false && $this->resource) {
             return $this->language->evaluate($option, array(
                 'resource' => $this->resource
+            ));
+        }
+
+        if (strpos($option, 'container.') !== false && $this->container) {
+            return $this->language->evaluate($option, array(
+                'container' => $this->container
             ));
         }
 

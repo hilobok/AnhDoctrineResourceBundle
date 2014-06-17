@@ -35,6 +35,8 @@ services:
 
     anh_doctrine_resource.controller.options_parser:
         class: %anh_doctrine_resource.controller.options_parser.class%
+        arguments:
+            - @service_container
 
     anh_doctrine_resource.controller.redirect_handler:
         class: %anh_doctrine_resource.controller.redirect_handler.class%
