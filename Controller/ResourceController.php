@@ -27,21 +27,19 @@ class ResourceController extends Controller
     public function createAction(Request $request)
     {
         $options = $this->getOptions($request, array(
-            'redirect' => $this->getRouteName('list', $this->resourceManager->getResourceName()),
-            'form' => $this->getFormType($this->resourceManager->getResourceName()),
             'view' => 'AnhDoctrineResource:Default:create.html.twig',
-            'viewVars' => array()
         ));
 
         $resource = $this->resourceManager->createResource();
         $form = $this->createForm($options['form'], $resource);
+        $this->addRedirect($form, $request->headers->get('referer'));
 
         if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
             $this->resourceManager->create($resource);
             $this->optionsParser->setResource($resource);
 
             return $this->redirectHandler
-                ->setReferer($request->headers->get('referer'))
+                ->setReferer($form->get('_redirect')->getData())
                 ->redirectTo($options['redirect'])
             ;
         }
@@ -59,33 +57,15 @@ class ResourceController extends Controller
     {
         $options = $this->getOptions($request, array(
             'criteria' => array(
-                'id' => 'request.attributes.id'
+                'id' => 'request.attributes.get("id")'
             ),
-            'sorting' => null,
-            'redirect' => $this->getRouteName('list', $this->resourceManager->getResourceName()),
-            'form' => $this->getFormType($this->resourceManager->getResourceName()),
+            'method' => 'findOneBy',
             'view' => 'AnhDoctrineResource:Default:update.html.twig',
-            'viewVars' => array()
         ));
 
-        $resource = $this->resourceManager->getRepository()->findOneBy(
-            $options['criteria'],
-            $options['sorting']
-        );
-
+        $resource = $this->getResources($options);
         $form = $this->createForm($options['form'], $resource);
-
-        if (!$form->has('_redirect')) {
-            $form->add($this->get('form.factory')->createNamed(
-                '_redirect',
-                'hidden',
-                $request->headers->get('referer'),
-                array(
-                    'auto_initialize' => false,
-                    'mapped' => false
-                )
-            ));
-        }
+        $this->addRedirect($form, $request->headers->get('referer'));
 
         if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
             $this->resourceManager->update($resource);
@@ -109,17 +89,13 @@ class ResourceController extends Controller
     public function deleteAction(Request $request)
     {
         $options = $this->getOptions($request, array(
-            'criteria' => null,
-            'resource' => 'request.request.id',
-            'redirect' => $this->getRouteName('list', $this->resourceManager->getResourceName()),
+            'resource' => 'request.request.get("id")',
         ));
 
         $resource = $options['resource'];
 
         if (!empty($options['criteria'])) {
-            $resource = $this->resourceManager->getRepository()
-                ->fetch($options['criteria'])
-            ;
+            $resource = $this->getResources($options);
         }
 
         $this->resourceManager->delete($resource);
@@ -133,50 +109,10 @@ class ResourceController extends Controller
     public function listAction(Request $request)
     {
         $options = $this->getOptions($request, array(
-            'criteria' => null,
-            'sorting' => null,
-            'limit' => null,
-            'method' => null,
-            'paginator' => null,
-            'arguments' => array(),
             'view' => 'AnhDoctrineResource:Default:list.html.twig',
-            'viewVars' => array()
         ));
 
-        if (empty($options['method'])) {
-            if (empty($options['paginator'])) {
-                $options['method'] = 'fetch';
-                $options['arguments'] = array(
-                    $options['criteria'],
-                    $options['sorting'],
-                    $options['limit']
-                );
-            } else {
-                $options['paginator'] = $this->optionsParser->process($options['paginator'] + array(
-                    'page' => 'request.attributes.page',
-                    'limit' => 10,
-                    'route' => 'request.attributes._route',
-                    'parameter' => 'page'
-                ));
-
-                $options['method'] = 'paginate';
-                $options['arguments'] = array(
-                    $options['paginator']['page'] ?: 1,
-                    $options['paginator']['limit'],
-                    $options['criteria'],
-                    $options['sorting']
-                );
-            }
-        }
-
-        $resources = call_user_func_array(
-            array($this->resourceManager->getRepository(), $options['method']),
-            $options['arguments']
-        );
-
-        if (!empty($options['paginator']['route'])) {
-            // set url
-        }
+        $resources = $this->getResources($options);
 
         return array(
             'view' => $options['view'],
@@ -190,17 +126,13 @@ class ResourceController extends Controller
     {
         $options = $this->getOptions($request, array(
             'criteria' => array(
-                'id' => 'request.attributes.id'
+                'id' => 'request.attributes.get("id")'
             ),
-            'sorting' => null,
+            'method' => 'findOneBy',
             'view' => 'AnhDoctrineResource:Default:show.html.twig',
-            'viewVars' => array()
         ));
 
-        $resource = $this->resourceManager->getRepository()->findOneBy(
-            $options['criteria'],
-            $options['sorting']
-        );
+        $resource = $this->getResources($options);
 
         return array(
             'view' => $options['view'],
@@ -212,10 +144,7 @@ class ResourceController extends Controller
 
     public function dummyAction(Request $request)
     {
-        $options = $this->getOptions($request, array(
-            'view' => null,
-            'viewVars' => array()
-        ));
+        $options = $this->getOptions($request);
 
         return array(
             'view' => $options['view'],
@@ -225,21 +154,37 @@ class ResourceController extends Controller
 
     protected function getOptions(Request $request, array $defaults = array())
     {
-        $options = $request->attributes->get('_anh_resource', array()) + $defaults;
-
         return $this->optionsParser
             ->setRequest($request)
-            ->parse($options)
+            ->setResource(null)
+            ->setResourceName($this->resourceManager->getResourceName())
+            ->parse($request->attributes->get('_anh_resource'), $defaults)
         ;
     }
 
-    protected function getRouteName($name, $resourceName)
+    protected function getResources($options)
     {
-        return sprintf('%s_%s', str_replace('.', '_', $resourceName), $name);
+        return call_user_func_array(
+            array(
+                $this->resourceManager->getRepository(),
+                $options['method']
+            ),
+            $options['arguments']
+        );
     }
 
-    protected function getFormType($resourceName)
+    protected function addRedirect($form, $redirect)
     {
-        return str_replace('.', '_', $resourceName);
+        if (!$form->has('_redirect')) {
+            $form->add($this->get('form.factory')->createNamed(
+                '_redirect',
+                'hidden',
+                $redirect,
+                array(
+                    'auto_initialize' => false,
+                    'mapped' => false
+                )
+            ));
+        }
     }
 }

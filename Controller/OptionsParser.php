@@ -2,16 +2,39 @@
 
 namespace Anh\DoctrineResourceBundle\Controller;
 
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
+use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class OptionsParser
 {
+    protected $langauge;
+
+    protected $resolver;
+
     protected $request;
 
     protected $resource;
 
-    protected $options;
+    protected $resourceName;
+
+    public function __construct()
+    {
+        $this->language = new ExpressionLanguage();
+        $this->resolver = new OptionsResolver();
+        $this->configureOptions($this->resolver);
+    }
+
+    public function parse(array $options = array(), array $defaults = array())
+    {
+        $this->resolver->setDefaults($defaults);
+
+        return $this->process(
+            $this->resolver->resolve($options)
+        );
+    }
 
     public function setRequest(Request $request)
     {
@@ -27,9 +50,11 @@ class OptionsParser
         return $this;
     }
 
-    public function parse(array $options)
+    public function setResourceName($resourceName)
     {
-        return $this->process($options);
+        $this->resourceName = $resourceName;
+
+        return $this;
     }
 
     public function process($option)
@@ -42,44 +67,102 @@ class OptionsParser
             return $option;
         }
 
-        if (strpos($option, 'request.') === 0) {
-            return $this->getFromRequest($option);
+        if (strpos($option, 'request.') !== false && $this->request) {
+            return $this->language->evaluate($option, array(
+                'request' => $this->request
+            ));
         }
 
-        if (strpos($option, 'resource.') === 0) {
-            return $this->getFromResource($option);
+        if (strpos($option, 'resource.') !== false && $this->resource) {
+            return $this->language->evaluate($option, array(
+                'resource' => $this->resource
+            ));
         }
 
         return $option;
     }
 
-    protected function getFromRequest($name)
+    protected function configureOptions(OptionsResolverInterface $resolver)
     {
-        $name = substr($name, 8);
+        $resolver->setDefaults(array(
+            'criteria' => null,
+            'sorting' => null,
+            'offset' => null,
+            'page' => null,
+            'limit' => function (Options $options) {
+                return is_null($options['page']) ? null : 10;
+            },
 
-        if (strpos($name, '.') === false) {
-            $name = sprintf('attributes.%s', $name);
-        }
+            'method' => function (Options $options) {
+                return is_null($options['page']) ? 'fetch' : 'paginate';
+            },
+            'arguments' => function (Options $options) {
+                switch ($options['method']) {
+                    case 'fetch':
+                        return array(
+                            $options['criteria'],
+                            $options['sorting'],
+                            $options['limit'],
+                            $options['offset'],
+                        );
 
-        list($bag, $name) = explode('.', $name, 2);
+                    case 'paginate':
+                        return array(
+                            $options['page'],
+                            $options['limit'],
+                            $options['criteria'],
+                            $options['sorting'],
+                        );
 
-        if (!in_array($bag, array('query', 'request', 'attributes'), true)) {
-            throw new \InvalidArgumentException(
-                sprintf("Unknown ParameterBag '%s'.", $bag)
-            );
-        }
+                    case 'findOneBy':
+                        return array(
+                            $options['criteria'],
+                            $options['sorting'],
+                        );
 
-        return $this->request->{$bag}->get($name);
-    }
+                    default:
+                        return array();
+                }
+            },
 
-    protected function getFromResource($name)
-    {
-        if (!$this->resource) {
-            return $name;
-        }
+            'redirect' => 'list',
 
-        $accessor = PropertyAccess::createPropertyAccessor();
+            'form' => function (Options $options) {
+                return str_replace('.', '_', $this->resourceName);
+            },
 
-        return $accessor->getValue($this->resource, substr($name, 9));
+            'view' => null,
+            'viewVars' => array(),
+        ));
+
+        $resolver->setNormalizers(array(
+            'redirect' => function (Options $options, $value) {
+                if (!is_array($value)) {
+                    $value = array(
+                        'route' => $value,
+                        'parameters' => array(),
+                    );
+                }
+
+                if (in_array($value['route'], array('create', 'update', 'list', 'show'), true)) {
+                    $value['route'] = sprintf(
+                        '%s_%s',
+                        str_replace('.', '_', $this->resourceName),
+                        $value['route']
+                    );
+                }
+
+                return $value + array('parameters' => array());
+            }
+        ));
+
+        $resolver->setAllowedValues(array(
+            'redirect' => function ($value) {
+                return is_null($value) || is_string($value) || (is_array($value) && isset($value['route']));
+            },
+            'view' => function ($value) {
+                return is_null($value) || is_string($value) || (is_array($value) && isset($value['format']));
+            }
+        ));
     }
 }

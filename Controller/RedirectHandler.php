@@ -28,24 +28,27 @@ class RedirectHandler
 
     public function redirectTo($redirect, array $parameters = array())
     {
-        if (is_array($redirect) && isset($redirect['route'])) {
-            $parameters = isset($redirect['parameters']) ? $redirect['parameters'] : array();
+        if (is_array($redirect)) {
+            $redirect += array(
+                'route' => '',
+                'parameters' => array()
+            );
 
-            return $this->redirectTo($redirect['route'], $this->optionsParser->process($parameters));
+            return $this->redirectTo(
+                $redirect['route'],
+                $this->optionsParser->process($redirect['parameters'])
+            );
         }
 
-        if (is_string($redirect)) {
-            if ($redirect === 'referer') {
-                return $this->redirect($this->referer);
-            }
-
-            $route = $this->router->getRouteCollection()->get($redirect);
-            if ($route) {
-                return $this->redirect($this->router->generate($redirect, $parameters));
-            }
-
-            return $this->redirect($redirect);
+        if ($redirect === 'referer') {
+            return $this->redirect($this->referer);
         }
+
+        if ($this->router->getRouteCollection()->get($redirect)) {
+            return $this->redirect($this->router->generate($redirect, $parameters));
+        }
+
+        return $this->redirect($redirect);
     }
 
     protected function redirect($url, $status = 302)
