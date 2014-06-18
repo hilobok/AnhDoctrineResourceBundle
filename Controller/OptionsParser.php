@@ -2,14 +2,14 @@
 
 namespace Anh\DoctrineResourceBundle\Controller;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\HttpFoundation\Request;
 
-class OptionsParser
+class OptionsParser extends ContainerAware
 {
     protected $langauge;
 
@@ -21,9 +21,8 @@ class OptionsParser
 
     protected $resourceName;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct()
     {
-        $this->container = $container;
         $this->language = new ExpressionLanguage();
         $this->resolver = new OptionsResolver();
         $this->configureOptions($this->resolver);
