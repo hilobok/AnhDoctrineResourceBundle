@@ -22,8 +22,6 @@ class ResourceServicesCompilerPass implements CompilerPassInterface
     {
         $resources = $container->getParameter('anh_doctrine_resource.resources');
 
-        $ruleResolver = $container->getDefinition('anh_doctrine_resource.rule_resolver');
-
         foreach ($resources as $name => $resource) {
             $manager = $this->getObjectManagerService($container, $resource['driver'], $resource['manager']);
 
@@ -44,16 +42,7 @@ class ResourceServicesCompilerPass implements CompilerPassInterface
                 $controllerService,
                 $this->createControllerDefinition($resource['controller'], $managerService)
             );
-
-            if (!empty($resource['rules']) && is_array($resource['rules'])) {
-                foreach ($resource['rules'] as $rule => $criteria) {
-                    $ruleResolver->addMethodCall(
-                        'add', array($name, $rule, $criteria)
-                    );
-                }
-            }
         }
-
     }
 
     private function getObjectManagerService(ContainerBuilder $container, $driver, $manager)
