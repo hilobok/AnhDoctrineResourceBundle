@@ -3,7 +3,6 @@
 namespace Anh\DoctrineResourceBundle;
 
 use Symfony\Component\Form\FormFactoryInterface;
-use Symfony\Component\Routing\RouterInterface;
 
 class FilterFormBuilder
 {
