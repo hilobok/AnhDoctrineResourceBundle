@@ -3,10 +3,11 @@
 namespace Anh\DoctrineResourceBundle\EventListener;
 
 use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class ViewListener
+class ResourceListener
 {
     public function __construct($templating, $serializer = null)
     {
@@ -14,9 +15,22 @@ class ViewListener
         $this->serializer = $serializer;
     }
 
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event->getRequest();
+        $filter = $request->query->get('filter');
+
+        if (!empty($filter) && is_array($filter)) {
+            $request->attributes->set('_route_params', array_merge(
+                array('filter' => $filter),
+                $request->attributes->get('_route_params')
+            ));
+        }
+    }
+
     public function onKernelView(GetResponseForControllerResultEvent $event)
     {
-        $controllerResult = $event->getControllerResult() + array(
+        $controllerResult = (array) $event->getControllerResult() + array(
             'view' => null,
             'data' => array()
         );

@@ -1,0 +1,21 @@
+{% block _filter_sort_widget %}
+    <div class="sorting">
+        {{ form_widget(form.field) }}
+        {{ form_widget(form.order) }}
+    </div>
+{% endblock %}
+
+{% block _filter_sort_field_widget %}
+    <span>
+        {{ block('choice_widget_collapsed') }}
+    </span>
+{% endblock %}
+
+{% block _filter_sort_order_widget %}
+    {% for child in form %}
+        <span>
+            {{ form_widget(child) }}
+            {{ form_label(child) }}
+        </span>
+    {% endfor %}
+{% endblock %}

@@ -11,7 +11,8 @@
     ],
 
     "require": {
-        "anh/doctrine-extensions-resource": "0.1.*"
+        "php": ">=5.4",
+        "anh/doctrine-extensions-resource": "0.4.*"
     },
 
     "minimum-stability": "stable",

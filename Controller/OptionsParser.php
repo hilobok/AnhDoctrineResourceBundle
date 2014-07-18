@@ -8,6 +8,7 @@ use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\HttpFoundation\Request;
+use Anh\DoctrineResourceBundle\FilterFormBuilder;
 
 class OptionsParser extends ContainerAware
 {
@@ -21,6 +22,8 @@ class OptionsParser extends ContainerAware
 
     protected $resourceName;
 
+    protected $filterFormBuilder;
+
     public function __construct()
     {
         $this->language = new ExpressionLanguage();
@@ -30,10 +33,12 @@ class OptionsParser extends ContainerAware
 
     public function parse(array $options = array(), array $defaults = array())
     {
-        $this->resolver->setDefaults($defaults);
+        $this->resolver->setDefaults(
+            $this->process($defaults)
+        );
 
-        return $this->process(
-            $this->resolver->resolve($options)
+        return $this->resolver->resolve(
+            $this->process($options)
         );
     }
 
@@ -54,6 +59,13 @@ class OptionsParser extends ContainerAware
     public function setResourceName($resourceName)
     {
         $this->resourceName = $resourceName;
+
+        return $this;
+    }
+
+    public function setFilterFormBuilder(FilterFormBuilder $filterFormBuilder)
+    {
+        $this->filterFormBuilder = $filterFormBuilder;
 
         return $this;
     }
@@ -96,6 +108,7 @@ class OptionsParser extends ContainerAware
     protected function configureOptions(OptionsResolverInterface $resolver)
     {
         $resolver->setDefaults(array(
+            'filter' => null,
             'criteria' => null,
             'sorting' => null,
             'offset' => null,
@@ -142,12 +155,93 @@ class OptionsParser extends ContainerAware
             'form' => function (Options $options) {
                 return str_replace('.', '_', $this->resourceName);
             },
+            'form_options' => array(),
 
             'view' => null,
             'viewVars' => array(),
         ));
 
         $resolver->setNormalizers(array(
+            'filter' => function (Options $options, $value) {
+                if (empty($value)) {
+                    return null;
+                }
+
+                if (is_string($value)) {
+                    if (!class_exists($value)) {
+                        throw new \Exception(
+                            sprintf("Filter '%s' not exists", $value)
+                        );
+                    }
+
+                    $filter = array(
+                        'instance' => new $value,
+                        'parameters' => array(),
+                    );
+                }
+
+                if (is_object($value)) {
+                    $filter = array(
+                        'instance' => $value,
+                        'parameters' => array(),
+                    );
+                }
+
+                if (is_array($value)) {
+                    $filter = $value + array(
+                        'parameters' => array(),
+                    );
+                }
+
+                if (isset($filter['instance']) && isset($filter['parameters'])) {
+                    $filter['form'] = $this->filterFormBuilder->build(
+                        $filter['instance'],
+                        $filter['parameters']
+                    );
+
+                    return $filter;
+                }
+
+                throw new \Exception('Unable to normalize filter.');
+            },
+
+            'criteria' => function (Options $options, $value) {
+                if (isset($options['filter']['instance'])) {
+                    $filter = $options['filter']['instance'];
+                    $parameters = $options['filter']['parameters'];
+
+                    if ($options['filter']['form']->handleRequest($this->request)->isValid()) {
+                        $criteria = $filter->buildCriteria($parameters);
+
+                        if (!empty($criteria)) {
+                            $value = array_merge((array) $value, $criteria);
+                        }
+                    }
+                }
+
+                return $value;
+            },
+
+            'sorting' => function (Options $options, $value) {
+                if (isset($options['filter']['instance'])) {
+                    $parameters = $options['filter']['parameters'];
+                    $value = $options['filter']['instance']->buildSorting($parameters);
+                }
+
+                return $value;
+            },
+
+            'viewVars' => function (Options $options, $value) {
+                if (isset($options['filter']['form'])) {
+                    $value = array_merge(
+                        (array) $value,
+                        array('filter' => $options['filter']['form']->createView())
+                    );
+                }
+
+                return $value;
+            },
+
             'redirect' => function (Options $options, $value) {
                 if (!is_array($value)) {
                     $value = array(

@@ -6,7 +6,8 @@ parameters:
     anh_doctrine_resource.orm.load_metadata_subscriber.class: Anh\DoctrineResource\ORM\EventListener\LoadMetadataSubscriber
     anh_doctrine_resource.controller.options_parser.class: Anh\DoctrineResourceBundle\Controller\OptionsParser
     anh_doctrine_resource.controller.redirect_handler.class: Anh\DoctrineResourceBundle\Controller\RedirectHandler
-    anh_doctrine_resource.controller.view_listener.class: Anh\DoctrineResourceBundle\EventListener\ViewListener
+    anh_doctrine_resource.resource_listener.class: Anh\DoctrineResourceBundle\EventListener\ResourceListener
+    anh_doctrine_resource.filter_form_builder.class: Anh\DoctrineResourceBundle\FilterFormBuilder
 
 services:
     anh_doctrine_resource.orm.repository_factory:
@@ -40,6 +41,7 @@ services:
         class: %anh_doctrine_resource.controller.options_parser.class%
         calls:
             - [ setContainer, [@service_container] ]
+            - [ setFilterFormBuilder, [@anh_doctrine_resource.filter_form_builder] ]
 
     anh_doctrine_resource.controller.redirect_handler:
         class: %anh_doctrine_resource.controller.redirect_handler.class%
@@ -47,13 +49,14 @@ services:
             - @router
             - @anh_doctrine_resource.controller.options_parser
 
-    anh_doctrine_resource.controller.view_listener:
-        class: %anh_doctrine_resource.controller.view_listener.class%
+    anh_doctrine_resource.resource_listener:
+        class: %anh_doctrine_resource.resource_listener.class%
         arguments:
             - @templating
             - @?serializer
         tags:
             - { name: kernel.event_listener, event: kernel.view, method: onKernelView }
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
 
     anh_doctrine_resource.orm.load_metadata_subscriber:
         class: %anh_doctrine_resource.orm.load_metadata_subscriber.class%
@@ -62,3 +65,8 @@ services:
         tags:
             - { name: doctrine.event_subscriber }
         public: false
+
+    anh_doctrine_resource.filter_form_builder:
+        class: %anh_doctrine_resource.filter_form_builder.class%
+        arguments:
+            - @form.factory
