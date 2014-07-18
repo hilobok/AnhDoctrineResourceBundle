@@ -125,6 +125,7 @@ class OptionsParser extends ContainerAware
                             $options['sorting'],
                         );
 
+                    case 'fetchOne':
                     case 'findOneBy':
                         return array(
                             $options['criteria'],

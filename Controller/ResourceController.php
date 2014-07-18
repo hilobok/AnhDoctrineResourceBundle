@@ -29,7 +29,7 @@ class ResourceController extends Controller
         $options = $this->getOptions($request);
 
         $resource = $this->resourceManager->createResource();
-        $form = $this->createForm($options['form'], $resource);
+        $form = $this->createForm($options['form'], $resource, $options['form_options']);
         $this->addRedirect($form, $request->headers->get('referer'));
 
         if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
@@ -61,7 +61,7 @@ class ResourceController extends Controller
         ));
 
         $resource = $this->getResources($options);
-        $form = $this->createForm($options['form'], $resource);
+        $form = $this->createForm($options['form'], $resource, $options['form_options']);
         $this->addRedirect($form, $request->headers->get('referer'));
 
         if ($request->isMethod('POST') && $form->handleRequest($request)->isValid()) {
