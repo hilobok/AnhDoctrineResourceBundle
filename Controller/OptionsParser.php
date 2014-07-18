@@ -68,6 +68,10 @@ class OptionsParser extends ContainerAware
             return $option;
         }
 
+        if (!is_string($option)) {
+            return $option;
+        }
+
         if (strpos($option, 'request.') !== false && $this->request) {
             return $this->language->evaluate($option, array(
                 'request' => $this->request
