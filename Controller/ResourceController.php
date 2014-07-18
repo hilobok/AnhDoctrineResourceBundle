@@ -152,7 +152,7 @@ class ResourceController extends Controller
             ->setRequest($request)
             ->setResource(null)
             ->setResourceName($this->resourceManager->getResourceName())
-            ->parse($request->attributes->get('_anh_resource'), $defaults)
+            ->parse($request->attributes->get('_anh_resource', array()), $defaults)
         ;
     }
 
