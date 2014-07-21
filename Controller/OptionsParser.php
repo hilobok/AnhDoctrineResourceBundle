@@ -158,7 +158,7 @@ class OptionsParser extends ContainerAware
             'form_options' => array(),
 
             'view' => null,
-            'viewVars' => array(),
+            'data' => array(),
         ));
 
         $resolver->setNormalizers(array(
@@ -231,7 +231,7 @@ class OptionsParser extends ContainerAware
                 return $value;
             },
 
-            'viewVars' => function (Options $options, $value) {
+            'data' => function (Options $options, $value) {
                 if (isset($options['filter']['form'])) {
                     $value = array_merge(
                         (array) $value,

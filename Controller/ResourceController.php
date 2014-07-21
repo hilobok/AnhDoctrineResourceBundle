@@ -47,7 +47,7 @@ class ResourceController extends Controller
             'data' => array(
                 'resource' => $resource,
                 'form' => $form->createView()
-            ) + $options['viewVars']
+            ) + $options['data']
         );
     }
 
@@ -79,7 +79,7 @@ class ResourceController extends Controller
             'data' => array(
                 'resource' => $resource,
                 'form' => $form->createView()
-            ) + $options['viewVars']
+            ) + $options['data']
         );
     }
 
@@ -113,7 +113,7 @@ class ResourceController extends Controller
             'view' => $options['view'],
             'data' => array(
                 'resources' => $resources
-            ) + $options['viewVars']
+            ) + $options['data']
         );
     }
 
@@ -132,7 +132,7 @@ class ResourceController extends Controller
             'view' => $options['view'],
             'data' => array(
                 'resource' => $resource
-            ) + $options['viewVars']
+            ) + $options['data']
         );
     }
 
@@ -142,7 +142,7 @@ class ResourceController extends Controller
 
         return array(
             'view' => $options['view'],
-            'data' => $options['viewVars']
+            'data' => $options['data']
         );
     }
 
