@@ -6,6 +6,7 @@ use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ResourceListener
 {
@@ -32,8 +33,18 @@ class ResourceListener
     {
         $controllerResult = (array) $event->getControllerResult() + array(
             'view' => null,
-            'data' => array()
+            'data' => array(),
+            'redirect' => null,
         );
+
+        if (isset($controllerResult['redirect'])) {
+            $redirect = ($controllerResult['redirect'] instanceof RedirectResponse)
+                ? $controllerResult['redirect']
+                : new RedirectResponse($controllerResult['redirect'])
+            ;
+
+            return $event->setResponse($redirect);
+        }
 
         if (is_string($controllerResult['view'])) {
             $response = $this->templating->renderResponse(

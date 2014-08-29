@@ -36,19 +36,20 @@ class ResourceController extends Controller
             $this->resourceManager->create($resource);
             $this->optionsParser->setResource($resource);
 
-            return $this->redirectHandler
+            $response['redirect'] = $this->redirectHandler
                 ->setReferer($form->get('_redirect')->getData())
                 ->redirectTo($options['redirect'])
             ;
         }
 
-        return array(
-            'view' => $options['view'],
-            'data' => array(
-                'resource' => $resource,
-                'form' => $form->createView()
-            ) + $options['data']
-        );
+        $response['view'] = $options['view'];
+        $response['data'] = array(
+            'resource' => $resource,
+            'resource_form' => $form,
+            'form' => $form->createView(),
+        ) + $options['data'];
+
+        return $response;
     }
 
     public function updateAction(Request $request)
@@ -68,19 +69,20 @@ class ResourceController extends Controller
             $this->resourceManager->update($resource);
             $this->optionsParser->setResource($resource);
 
-            return $this->redirectHandler
+            $response['redirect'] = $this->redirectHandler
                 ->setReferer($form->get('_redirect')->getData())
                 ->redirectTo($options['redirect'])
             ;
         }
 
-        return array(
-            'view' => $options['view'],
-            'data' => array(
-                'resource' => $resource,
-                'form' => $form->createView()
-            ) + $options['data']
-        );
+        $response['view'] = $options['view'];
+        $response['data'] = array(
+            'resource' => $resource,
+            'resource_form' => $form,
+            'form' => $form->createView(),
+        ) + $options['data'];
+
+        return $response;
     }
 
     public function deleteAction(Request $request)
