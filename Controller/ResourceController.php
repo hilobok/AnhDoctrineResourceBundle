@@ -37,7 +37,7 @@ class ResourceController extends Controller
             $this->optionsParser->setResource($resource);
 
             $response['redirect'] = $this->redirectHandler
-                ->setReferer($form->get('_redirect')->getData())
+                ->setReferer($form->get('_redirect')->getData() ?: $request->getUri())
                 ->redirectTo($options['redirect'])
             ;
         }
@@ -70,7 +70,7 @@ class ResourceController extends Controller
             $this->optionsParser->setResource($resource);
 
             $response['redirect'] = $this->redirectHandler
-                ->setReferer($form->get('_redirect')->getData())
+                ->setReferer($form->get('_redirect')->getData() ?: $request->getUri())
                 ->redirectTo($options['redirect'])
             ;
         }
@@ -100,7 +100,7 @@ class ResourceController extends Controller
         $this->resourceManager->delete($resource);
 
         return $this->redirectHandler
-            ->setReferer($request->headers->get('referer'))
+            ->setReferer($request->headers->get('referer') ?: $request->getUri())
             ->redirectTo($options['redirect'])
         ;
     }
