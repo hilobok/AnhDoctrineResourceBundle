@@ -51,9 +51,13 @@ abstract class AbstractFilter implements FilterInterface
     public function getSorting(array $parameters = array())
     {
         if ($this->sorting === null) {
+            $defaults = $this->getDefaults($parameters);
+
             $this->sorting = new FilterSorting(
                 $this->getSortFields($parameters),
-                $this->getSortOrders($parameters)
+                $this->getSortOrders($parameters),
+                $defaults['field'],
+                $defaults['order']
             );
         }
 
@@ -68,6 +72,17 @@ abstract class AbstractFilter implements FilterInterface
         return array(
             'desc' => '▽', // ▼
             'asc' => '△', // ▲
+        );
+    }
+
+    public function getDefaults(array $parameters = array())
+    {
+        $fields = $this->getSortFields($parameters);
+        $orders = $this->getSortOrders($parameters);
+
+        return array(
+            'field' => key($fields),
+            'order' => key($orders),
         );
     }
 }

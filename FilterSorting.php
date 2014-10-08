@@ -12,12 +12,12 @@ class FilterSorting
 
     protected $order;
 
-    public function __construct(array $fields = null, array $orders = null)
+    public function __construct(array $fields = null, array $orders = null, $field = null, $order = null)
     {
         $this->fields = $fields;
         $this->orders = $orders;
-        $this->field = key($fields);
-        $this->order = key($orders);
+        $this->field = $field ?: key($fields);
+        $this->order = $order ?: key($orders);
     }
 
     public function getField()
