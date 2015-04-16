@@ -130,6 +130,12 @@ class ResourceController extends Controller
 
         $resource = $this->getResources($options);
 
+        if (empty($resource)) {
+            throw $this->createNotFoundException(
+                'Resource not found.'
+            );
+        }
+
         return array(
             'view' => $options['view'],
             'data' => array(
